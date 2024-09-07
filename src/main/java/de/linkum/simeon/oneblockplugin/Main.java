@@ -6,16 +6,18 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        getServer().getPluginManager().registerEvents(new BlockListener(this), this);
+        createListenerInDimension("world");
+        createListenerInDimension("world_nether");
+        createListenerInDimension("world_the_end");
         getLogger().info("OneBlock Plugin enabled!");
+    }
+
+    public void createListenerInDimension(String dimension) {
+        getServer().getPluginManager().registerEvents(new BlockListener(this, dimension), this);
     }
 
     @Override
     public void onDisable() {
         getLogger().info("OneBlock Plugin disabled!");
-    }
-
-    public void regenerateBlock(BlockListener listener) {
-        listener.spawnNextBlock();
     }
 }
