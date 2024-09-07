@@ -1,0 +1,4 @@
+name: oneblockplugin
+version: '1.0-SNAPSHOT'
+main: de.linkum.simeon.oneblockplugin.Main
+api-version: '1.20'
