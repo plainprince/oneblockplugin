@@ -4,14 +4,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Random;
+import java.util.function.Supplier;
 
 public class BlockListener implements Listener {
 
@@ -37,11 +39,35 @@ public class BlockListener implements Listener {
             blocksBroken++;
             Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> {
                 this.spawnNextBlock();
+                // Find the nearest item to the block and teleport it to the target location
+                double closestDistance = Double.MAX_VALUE;
+                Item closestItem = null;
+
+                for (Entity entity : block.getLocation().getWorld().getNearbyEntities(block.getLocation(), 10, 10, 10)) {
+                    if (entity instanceof Item && !entity.isDead()) {
+                        Bukkit.getLogger().info("entity found");
+                        double distance = entity.getLocation().distance(block.getLocation());
+                        Bukkit.getLogger().info("entities distance to block: " + String.valueOf(distance));
+
+                        if (distance < closestDistance && distance < 1.35) {
+                            closestDistance = distance;
+                            closestItem = (Item) entity;
+                        }
+                    }
+                }
+
+                // If an item was found, teleport it to the target location
+                if (closestItem != null) {
+                    closestItem.teleport(new Location(Bukkit.getWorld("world"), this.oneBlockLocation.getX() + 0.5, this.oneBlockLocation.getY() + 1, this.oneBlockLocation.getZ() + 0.5));
+                    Bukkit.getLogger().info(String.valueOf(closestDistance));
+                } else {
+                    Bukkit.getLogger().info("no items found?");
+                }
             }, 1L);
             if(blocksBroken > 99) {
                 blocksBroken = 0;
                 stage++;
-            };
+            }
             Bukkit.getLogger().info("block broken");
         }
     }
