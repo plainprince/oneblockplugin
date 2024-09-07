@@ -1,4 +1,4 @@
-name: OneBlockPlugin
-version: '${project.version}'
+name: oneblock
+version: '1.0.0'
 main: de.linkum.simeon.oneblockplugin.Main
 api-version: '1.20'

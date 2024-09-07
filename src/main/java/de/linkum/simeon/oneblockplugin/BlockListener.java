@@ -18,6 +18,7 @@ public class BlockListener implements Listener {
     private final Main plugin;
     private final Location oneBlockLocation;
     private int stage = 1;
+    private int blocksBroken = 0;
     private final Random random = new Random();
 
     public BlockListener(Main plugin) {
@@ -32,8 +33,16 @@ public class BlockListener implements Listener {
         Block block = event.getBlock();
 
         if (block.getLocation().equals(oneBlockLocation)) {
-            event.setDropItems(false); // Verhindert, dass der Block normale Drops gibt
-            spawnNextBlock();
+            // event.setDropItems(false); // Verhindert, dass der Block normale Drops gibt
+            blocksBroken++;
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> {
+                this.spawnNextBlock();
+            }, 1L);
+            if(blocksBroken > 99) {
+                blocksBroken = 0;
+                stage++;
+            };
+            Bukkit.getLogger().info("block broken");
         }
     }
 
@@ -70,7 +79,7 @@ public class BlockListener implements Listener {
     }
 
     private Material getNetherBlock() {
-        Material[] netherBlocks = {Material.NETHERRACK, Material.NETHER_BRICKS, Material.QUARTZ_ORE};
+        Material[] netherBlocks = {Material.NETHERRACK, Material.NETHER_BRICKS, Material.NETHER_QUARTZ_ORE};
         return netherBlocks[random.nextInt(netherBlocks.length)];
     }
 }
