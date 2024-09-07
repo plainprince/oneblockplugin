@@ -14,8 +14,4 @@ public class Main extends JavaPlugin {
     public void onDisable() {
         getLogger().info("OneBlock Plugin disabled!");
     }
-
-    public void regenerateBlock(BlockListener listener) {
-        listener.spawnNextBlock();
-    }
 }
