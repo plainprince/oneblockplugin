@@ -14,7 +14,11 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getWorlds().forEach(i -> createListenerInDimension(i.getName()));
+        Bukkit.getWorlds().forEach(i -> {
+            if(i.getName().startsWith("customworld")) {
+                createListenerInDimension(i.getName());
+            }
+        });
         getLogger().info("OneBlock Plugin enabled!");
 
         // Register the custom command with Bukkit
