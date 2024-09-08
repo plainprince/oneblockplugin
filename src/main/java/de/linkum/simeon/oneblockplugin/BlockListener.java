@@ -1,20 +1,16 @@
 package de.linkum.simeon.oneblockplugin;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.Random;
+import java.util.*;
 
-import static java.lang.Double.MAX_VALUE;
 import static org.bukkit.Material.*;
 
 public class BlockListener implements Listener {
@@ -34,55 +30,38 @@ public class BlockListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        Bukkit.getLogger().info("block broken");
         Player player = event.getPlayer();
         Block block = event.getBlock();
 
-        Bukkit.getLogger().info(String.valueOf(block.getLocation()));
-
-        if (!(block.getLocation().equals(oneBlockLocation))) {
+        if (block.getLocation().getX() != oneBlockLocation.getX() ||
+                block.getLocation().getY() != oneBlockLocation.getY() ||
+                block.getLocation().getZ() != oneBlockLocation.getZ() ||
+                !block.getWorld().getName().equals(oneBlockLocation.getWorld().getName())) {
             return;
         }
-        // event.setDropItems(false); // Verhindert, dass der Block normale Drops gibt
         blocksBroken++;
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> {
-            this.spawnNextBlock(block);
-            // Find the nearest item to the block and teleport it to the target location
-            double closestDistance = 0;
-            Item closestItem = null;
 
-            for (Entity entity : block.getLocation().getWorld().getNearbyEntities(block.getLocation(), 10, 10, 10)) {
-                if (!(entity instanceof Item && !entity.isDead())) {
-                    return;
+        player.setExp(player.getExp() + event.getExpToDrop());
+        Collection<ItemStack> drops = block.getDrops(player.getInventory().getItemInMainHand());
+
+        for (ItemStack drop : drops) {
+            Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(drop);
+            if (!itemsThatDidNotFit.isEmpty()) {
+                for (ItemStack item : itemsThatDidNotFit.values()) {
+                    if (player.getGameMode().equals(GameMode.CREATIVE))
+                        break;
+                    // Drop the item on the ground
+                    player.getWorld().dropItemNaturally(oneBlockLocation, item);
                 }
-                Bukkit.getLogger().info("entity found");
-                double distance = entity.getLocation().distance(block.getLocation());
-                Bukkit.getLogger().info("entities distance to block: " + distance);
-
-                if (!(distance < MAX_VALUE && distance < 1.35)) {
-                    return;
-                }
-                closestDistance = distance;
-                closestItem = (Item) entity;
             }
+        }
 
-            // If an item was found, teleport it to the target location
-            if (closestItem != null) {
-                World world = Bukkit.getWorld("world");
-                int positionX = (int) (this.oneBlockLocation.getX() + 0.5);
-                int positionY = (int) (this.oneBlockLocation.getY() + 1);
-                int positionZ = (int) (this.oneBlockLocation.getZ() + 0.5);
-                closestItem.teleport(new Location(world, positionX, positionY, positionZ));
-                Bukkit.getLogger().info(String.valueOf(closestDistance));
-            } else {
-                Bukkit.getLogger().info("no items found?");
-            }
-        }, 1L);
+        event.setDropItems(false);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> this.spawnNextBlock(block), 1L);
         if(blocksBroken > 99) {
             blocksBroken = 0;
             stage++;
         }
-        Bukkit.getLogger().info("block broken at correct position");
     }
 
     public void spawnNextBlock(Block block) {
@@ -118,5 +97,23 @@ public class BlockListener implements Listener {
     private Material getNetherBlock() {
         Material[] netherBlocks = {Material.NETHERRACK, Material.NETHER_BRICKS, Material.NETHER_QUARTZ_ORE};
         return netherBlocks[random.nextInt(netherBlocks.length)];
+    }
+
+    @EventHandler
+    public void onChunkLoad(ChunkLoadEvent event) {
+        if(event.getWorld().getName().startsWith("customdimension")) {
+            for( int x = 0; x < 16; x++ ) {
+                for (int y = -64; y < 256; y++) {
+                    for (int z = 0; z < 16; z++) {
+                        Block block = event.getChunk().getBlock(x, y, z);
+                        block.setType(Material.AIR);
+                    }
+                }
+            }
+        }
+        if(event.isNewChunk()) {
+            Block b = event.getWorld().getBlockAt(0, 100, 0);
+            b.setType(GRASS_BLOCK);
+        }
     }
 }
