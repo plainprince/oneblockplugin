@@ -41,15 +41,17 @@ public class BlockListener implements Listener {
         }
         blocksBroken++;
 
-        player.setExp(player.getExp() + event.getExpToDrop());
+        player.giveExp(event.getExpToDrop());
         Collection<ItemStack> drops = block.getDrops(player.getInventory().getItemInMainHand());
 
         for (ItemStack drop : drops) {
             Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(drop);
             if (!itemsThatDidNotFit.isEmpty()) {
                 for (ItemStack item : itemsThatDidNotFit.values()) {
-                    if (player.getGameMode().equals(GameMode.CREATIVE))
+                    if (player.getGameMode().equals(GameMode.CREATIVE)) {
+                        Bukkit.getLogger().info("gamemode is creative");
                         break;
+                    }
                     // Drop the item on the ground
                     player.getWorld().dropItemNaturally(oneBlockLocation, item);
                 }
@@ -58,7 +60,7 @@ public class BlockListener implements Listener {
 
         event.setDropItems(false);
         Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> this.spawnNextBlock(block), 1L);
-        if(blocksBroken > 99) {
+        if(blocksBroken > (100 * stage) - 1) {
             blocksBroken = 0;
             stage++;
         }
