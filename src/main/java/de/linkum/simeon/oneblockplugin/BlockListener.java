@@ -22,15 +22,15 @@ import static org.bukkit.Material.*;
 public class BlockListener implements Listener {
     private final Main plugin;
     private final Location oneBlockLocation;
-    private int stage = 1;
-    private int highestStage = 1;
-    private int blocksBroken = 0;
+    public int stage = 1;
+    public int highestStage = 1;
+    public int blocksBroken = 0;
     private final Random random = new Random();
     private FriendSystem friendSystem;
     private String playerName;
     private int blocksBrokenAllTime = 0;
 
-    public BlockListener(Main plugin, String worldName) {
+    public BlockListener(Main plugin, String worldName, FriendSystem friendSystem) {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -48,33 +48,7 @@ public class BlockListener implements Listener {
         this.oneBlockLocation = new Location(world, 0, 100, 0); // Setze hier die Koordinaten des OneBlock
         this.spawnNextBlock(oneBlockLocation.getBlock());
         this.playerName = worldName.substring(15);
-        this.friendSystem = new FriendSystem(plugin, playerName);
-
-        Command command = new Command("stage") {
-            @Override
-            public boolean execute(@NotNull CommandSender sender, @NotNull String label, String[] args) {
-                if (sender instanceof Player && args.length == 1) {
-                    if(!args[0].matches("-?\\d+")) {
-                        sender.sendMessage(args[0] + " ist keine Zahl, bitte wähle eine stage größer als 0.");
-                        return true;
-                    }
-                    if(!(Integer.parseInt(args[0]) > 0)) {
-                        sender.sendMessage("Bitte wähle eine stage größer als 0.");
-                        return true;
-                    }
-                    if(Integer.parseInt(args[0]) <= highestStage) {
-                        stage = Integer.parseInt(args[0]);
-                        blocksBroken = 0;
-                        sender.sendMessage("Hat die stage zu: " + stage + " gesetzt");
-                    } else {
-                        sender.sendMessage("Du musst zuerst noch Blöcke abbauen!");
-                    }
-                }
-                return true;
-            }
-        };
-
-        this.plugin.getServer().getCommandMap().register("oneblock", command);
+        this.friendSystem = friendSystem;
     }
 
     @EventHandler
@@ -86,11 +60,9 @@ public class BlockListener implements Listener {
             return;
         }
 
-        Bukkit.getLogger().info(String.valueOf(friendSystem.getFriends()));
-
         if(!player.getName().equals(playerName) && (friendSystem.getFriends() == null || !friendSystem.getFriends().contains(player.getName()))) {
             event.setCancelled(true);
-            player.sendMessage("Hey! You can't break that here!");
+            player.sendMessage("Hey! Du kannst das hier nicht zerstören!");
             return;
         }
 
@@ -109,10 +81,6 @@ public class BlockListener implements Listener {
             Map<Integer, ItemStack> itemsThatDidNotFit = player.getInventory().addItem(drop);
             if (!itemsThatDidNotFit.isEmpty()) {
                 for (ItemStack item : itemsThatDidNotFit.values()) {
-                    if (player.getGameMode().equals(GameMode.CREATIVE)) {
-                        Bukkit.getLogger().info("gamemode is creative");
-                        break;
-                    }
                     // Drop the item on the ground
                     player.getWorld().dropItemNaturally(oneBlockLocation, item);
                 }
@@ -121,7 +89,7 @@ public class BlockListener implements Listener {
 
         event.setDropItems(false);
         Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> this.spawnNextBlock(block), 1L);
-        if(blocksBroken > (400 * stage) - 1) {
+        if(blocksBroken > (400 * stage) - 1 && stage < 14) {
             blocksBroken = 0;
             stage++;
             if(stage > highestStage) {
@@ -131,7 +99,7 @@ public class BlockListener implements Listener {
         }
     }
 
-    private void updateScoreboard(Player player) {
+    private void updateScoreboard(@NotNull Player player) {
         ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
         Objective objective = board.registerNewObjective("BlitzGamer", "dummy", ChatColor.GOLD + "BlitzGamer.javnet.de");
@@ -188,35 +156,353 @@ public class BlockListener implements Listener {
     public void spawnNextBlock(Block block) {
         switch (stage) {
             case 1:
-                block.setType(getSurfaceBlock());
+                block.setType(getWoodBlock(), false);
                 break;
             case 2:
-                block.setType(getUndergroundBlock());
+                block.setType(getStoneBlock(), false);
                 break;
             case 3:
-                block.setType(getNetherBlock());
+                block.setType(getPlainsBlock(), false);
                 break;
             case 4:
-                block.setType(END_PORTAL_FRAME);
+                block.setType(getUndergroundBlock(), false);
+                break;
+            case 5:
+                block.setType(getWinterBlock(), false);
+                break;
+            case 6:
+                block.setType(getOceanBlock(), false);
+                break;
+            case 7:
+                block.setType(getJungleBlock(), false);
+                break;
+            case 8:
+                block.setType(getSwampBlock(), false);
+                break;
+            case 9:
+                block.setType(getDungeonBlock(), false);
+                break;
+            case 10:
+                block.setType(getDesertBlock(), false);
+                break;
+            case 11:
+                block.setType(getNetherBlock(), false);
+                break;
+            case 12:
+                block.setType(getPlentyBlock(), false);
+                break;
+            case 13:
+                block.setType(getDesolationBlock(), false);
                 break;
             default:
-                block.setType(AIR);
+                block.setType(getEndBlock(), false);
                 break;
         }
+        block.getState().update(true, false);
     }
 
-        private Material getSurfaceBlock() {
-            Material[] surfaceBlocks = {GRASS_BLOCK, OAK_LOG, BIRCH_LOG};
-            return surfaceBlocks[random.nextInt(surfaceBlocks.length)];
-        }
+    private Material getWoodBlock() {
+        Material[] woodBlocks = {
+                ACACIA_LOG,
+                BIRCH_LOG,
+                DARK_OAK_LOG,
+                JUNGLE_LOG,
+                MANGROVE_LOG,
+                OAK_LOG,
+                SPRUCE_LOG,
+        };
 
-        private Material getUndergroundBlock() {
-            Material[] undergroundBlocks = {Material.STONE, Material.IRON_ORE, GOLD_ORE, DIAMOND_ORE, LAPIS_ORE};
-            return undergroundBlocks[random.nextInt(undergroundBlocks.length)];
-        }
+        return woodBlocks[random.nextInt(woodBlocks.length)];
+    }
 
-        private Material getNetherBlock() {
-            Material[] netherBlocks = {Material.NETHERRACK, Material.NETHER_BRICKS, Material.NETHER_QUARTZ_ORE};
-            return netherBlocks[random.nextInt(netherBlocks.length)];
-        }
+    private Material getStoneBlock() {
+        Material[] stoneBlocks = {
+                STONE,
+                IRON_ORE,
+                COAL_ORE,
+                DEEPSLATE
+        };
+
+        return stoneBlocks[random.nextInt(stoneBlocks.length)];
+    }
+
+    private Material getPlainsBlock() {
+        Material[] plainsBlocks = {
+                PODZOL,
+                MYCELIUM,
+                BIRCH_LEAVES,
+                IRON_ORE,
+                BEE_NEST,
+                OAK_LOG,
+                DIRT,
+                ANDESITE,
+                INFESTED_STONE,
+                DARK_OAK_LOG,
+                OAK_LEAVES,
+                BROWN_MUSHROOM_BLOCK,
+                DIORITE,
+                COAL_ORE,
+                GRAVEL,
+                DIAMOND_ORE,
+                GOLD_ORE,
+                GRASS_BLOCK,
+                DARK_OAK_LEAVES,
+                BIRCH_LOG,
+                COBBLESTONE,
+                SAND,
+                GRANITE,
+                COARSE_DIRT,
+                STONE,
+                CLAY,
+                EMERALD_ORE
+        };
+        return plainsBlocks[random.nextInt(plainsBlocks.length)];
+    }
+
+    private Material getUndergroundBlock() {
+        Material[] undergroundBlocks = {
+                COAL_ORE,
+                GRAVEL,
+                REDSTONE_ORE,
+                DIAMOND_ORE,
+                GOLD_ORE,
+                IRON_ORE,
+                COBBLESTONE,
+                SAND,
+                GRANITE,
+                COBWEB,
+                DIRT,
+                STONE,
+                OBSIDIAN,
+                ANDESITE,
+                SANDSTONE,
+                EMERALD_ORE,
+                LAPIS_ORE,
+                DIORITE
+        };
+        return undergroundBlocks[random.nextInt(undergroundBlocks.length)];
+    }
+
+    private Material getWinterBlock() {
+        Material[] winterBlocks = {
+                COBBLESTONE,
+                SAND,
+                DIRT,
+                STONE,
+                SPRUCE_LEAVES,
+                STRIPPED_SPRUCE_LOG,
+                ICE,
+                GOLD_ORE,
+                LAPIS_ORE,
+                SPRUCE_LOG,
+                SNOW_BLOCK
+        };
+        return winterBlocks[random.nextInt(winterBlocks.length)];
+    }
+
+    private Material getOceanBlock() {
+        Material[] oceanBlocks = {
+                BRAIN_CORAL_BLOCK,
+                BUBBLE_CORAL_BLOCK,
+                FIRE_CORAL_BLOCK,
+                TUBE_CORAL_BLOCK,
+                HORN_CORAL_BLOCK,
+                DIRT,
+                ANDESITE,
+                SANDSTONE,
+                RED_SAND,
+                WET_SPONGE,
+                GRAVEL,
+                PRISMARINE,
+                TURTLE_EGG,
+                SAND,
+                GRANITE,
+                STONE,
+                CLAY,
+                SPONGE,
+                SEA_LANTERN,
+                DARK_PRISMARINE
+        };
+
+        return oceanBlocks[random.nextInt(oceanBlocks.length)];
+    }
+
+    private Material getJungleBlock() {
+        Material[] jungleBlocks = {
+                PODZOL,
+                COAL_ORE,
+                MYCELIUM,
+                GRAVEL,
+                DIAMOND_ORE,
+                PUMPKIN,
+                GOLD_ORE,
+                GRASS_BLOCK,
+                JUNGLE_LEAVES,
+                JUNGLE_LOG,
+                COBBLESTONE,
+                COARSE_DIRT,
+                STRIPPED_JUNGLE_LOG,
+                DIRT,
+                STONE,
+                MELON,
+                EMERALD_ORE,
+                LAPIS_ORE
+        };
+
+        return jungleBlocks[random.nextInt(jungleBlocks.length)];
+    }
+
+    private Material getSwampBlock() {
+        Material[] swampBlocks = {
+                COAL_ORE,
+                GRAVEL,
+                DIAMOND_ORE,
+                GOLD_ORE,
+                GRASS_BLOCK,
+                COBBLESTONE,
+                COARSE_DIRT,
+                OAK_LOG,
+                DIRT,
+                STONE,
+                OAK_LEAVES,
+                CLAY,
+                EMERALD_ORE,
+                LAPIS_ORE
+        };
+
+        return swampBlocks[random.nextInt(swampBlocks.length)];
+    }
+
+    private Material getDungeonBlock() {
+        Material[] dungeonBlocks = {
+                COAL_ORE,
+                GRAVEL,
+                REDSTONE_ORE,
+                DIAMOND_ORE,
+                INFESTED_COBBLESTONE,
+                GOLD_ORE,
+                IRON_ORE,
+                COBBLESTONE,
+                OAK_PLANKS,
+                SAND,
+                GRANITE,
+                DIRT,
+                STONE,
+                ANDESITE,
+                INFESTED_STONE,
+                SANDSTONE,
+                EMERALD_BLOCK,
+                RED_MUSHROOM_BLOCK,
+                BROWN_MUSHROOM_BLOCK,
+                LAPIS_ORE,
+                DIORITE,
+                MOSSY_COBBLESTONE
+        };
+
+        return dungeonBlocks[random.nextInt(dungeonBlocks.length)];
+    }
+
+    private Material getDesertBlock() {
+        Material[] desertBlocks = {
+                SAND,
+                STONE,
+                RED_SANDSTONE,
+                SANDSTONE,
+                RED_SAND
+        };
+
+        return desertBlocks[random.nextInt(desertBlocks.length)];
+    }
+
+    private Material getNetherBlock() {
+        Material[] netherBlocks = {
+                GRAVEL,
+                NETHER_QUARTZ_ORE,
+                NETHERRACK,
+                SOUL_SAND,
+                RED_NETHER_BRICKS,
+                NETHER_BRICKS,
+                GLOWSTONE,
+                MAGMA_BLOCK
+        };
+
+        return netherBlocks[random.nextInt(netherBlocks.length)];
+    }
+
+    private Material getPlentyBlock() {
+        Material[] plentyBlocks = {
+                PODZOL,
+                REDSTONE_ORE,
+                HONEYCOMB_BLOCK,
+                TERRACOTTA,
+                IRON_ORE,
+                ANDESITE,
+                SPRUCE_LOG,
+                JUNGLE_LOG,
+                OAK_LOG,
+                DARK_OAK_LOG,
+                LAPIS_ORE,
+                COAL_ORE,
+                DIAMOND_ORE,
+                PUMPKIN,
+                GOLD_ORE,
+                GRASS_BLOCK,
+                ACACIA_LOG,
+                BIRCH_LOG,
+                JACK_O_LANTERN,
+                GRANITE,
+                HAY_BLOCK,
+                STONE,
+                MELON,
+                DIORITE,
+                EMERALD_ORE,
+                GRASS_BLOCK
+        };
+
+        return plentyBlocks[random.nextInt(plentyBlocks.length)];
+    }
+
+    private Material getDesolationBlock() {
+        Material[] desolationBlocks = {
+                PODZOL,
+                REDSTONE_ORE,
+                HONEYCOMB_BLOCK,
+                TERRACOTTA,
+                IRON_ORE,
+                OAK_LOG,
+                DARK_OAK_LOG,
+                LAPIS_ORE,
+                COAL_ORE,
+                DIAMOND_ORE,
+                PUMPKIN,
+                GOLD_ORE,
+                GRASS_BLOCK,
+                ACACIA_LOG,
+                BIRCH_LOG,
+                JACK_O_LANTERN,
+                GRANITE,
+                HAY_BLOCK,
+                STONE,
+                DIORITE,
+                MELON,
+                EMERALD_ORE
+        };
+
+        return desolationBlocks[random.nextInt(desolationBlocks.length)];
+    }
+
+    private Material getEndBlock() {
+        Material[] endBlocks = {
+                PURPUR_BLOCK,
+                END_STONE_BRICKS,
+                PURPLE_WOOL,
+                OBSIDIAN,
+                END_STONE,
+                CHEST,
+                TERRACOTTA,
+                PURPUR_PILLAR
+        };
+
+        return endBlocks[random.nextInt(endBlocks.length)];
+    }
 }
