@@ -2,9 +2,7 @@ package de.linkum.simeon.oneblockplugin;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -12,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.*;
+import org.bukkit.entity.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
@@ -22,6 +21,7 @@ import static org.bukkit.Material.*;
 public class BlockListener implements Listener {
     private final Main plugin;
     private final Location oneBlockLocation;
+    private final Location mobSpawnLocation;
     public int stage = 1;
     public int highestStage = 1;
     public int blocksBroken = 0;
@@ -39,13 +39,21 @@ public class BlockListener implements Listener {
 
                 if(player.getWorld().getName().startsWith("customdimension")) {
                     updateScoreboard(player);
+                    if(oneBlockLocation.getBlock().getType() == Material.AIR) {
+                        spawnNextBlock(oneBlockLocation.getBlock());
+                    }
+                }else {
+                    ScoreboardManager manager = Bukkit.getScoreboardManager();
+                    Scoreboard board = manager.getNewScoreboard();
+                    player.setScoreboard(board);
                 }
             }
         }.runTaskTimer(plugin, 0L, 2L);
 
         this.plugin = plugin;
         World world = Bukkit.getWorld(worldName);
-        this.oneBlockLocation = new Location(world, 0, 100, 0); // Setze hier die Koordinaten des OneBlock
+        this.oneBlockLocation = new Location(world, 0, 100, 0);
+        this.mobSpawnLocation = new Location(world, 0.5, 101, 0.5);
         this.spawnNextBlock(oneBlockLocation.getBlock());
         this.playerName = worldName.substring(15);
         this.friendSystem = friendSystem;
@@ -89,7 +97,7 @@ public class BlockListener implements Listener {
 
         event.setDropItems(false);
         Bukkit.getScheduler().scheduleSyncDelayedTask(this.plugin, () -> this.spawnNextBlock(block), 1L);
-        if(blocksBroken > (400 * stage) - 1 && stage < 14) {
+        if(blocksBroken > (200 * stage) - 1 && stage < 14) {
             blocksBroken = 0;
             stage++;
             if(stage > highestStage) {
@@ -129,7 +137,7 @@ public class BlockListener implements Listener {
         Score blocksBrokenScore = objective.getScore(ChatColor.WHITE + "OneBlocks zerstört: " + blocksBrokenAllTime);
         blocksBrokenScore.setScore(1);
 
-        int currentStageBlocks = 400 * stage;
+        int currentStageBlocks = 200 * stage;
         Score blocksTillNextStage = objective.getScore(ChatColor.WHITE + "Blöcke bis zur nächsten stage: " + (currentStageBlocks - blocksBroken));
         blocksTillNextStage.setScore(0);
 
@@ -199,6 +207,199 @@ public class BlockListener implements Listener {
                 break;
         }
         block.getState().update(true, false);
+
+        if(random.nextInt(100) < 10 && stage == 1) {
+            spawnFirstStageMob();
+        }
+
+        if(random.nextInt(100) < 30) {
+            switch(stage) {
+                case 2, 3:
+                    spawnFirstStageMob();
+                    break;
+                case 4:
+                    spawnSecondStageMob();
+                    break;
+                case 5:
+                    spawnThirdStageMob();
+                    break;
+                case 6:
+                    spawnSixthStageMob();
+                    break;
+                case 7:
+                    spawnSeventhStageMob();
+                    break;
+                case 8:
+                    spawnNinthStageMob();
+                    break;
+                case 9:
+                    spawnNinthStageMob();
+                    break;
+                case 10:
+                    spawnTenthStageMob();
+                    break;
+                case 11:
+                    spawnEleventhStageMob();
+                    break;
+            }
+        }
+    }
+
+    private void spawnFirstStageMob() {
+        EntityType[] mobs = {
+                EntityType.COW,
+                EntityType.SPIDER,
+                EntityType.SHEEP,
+                EntityType.PIG,
+                EntityType.VILLAGER,
+                EntityType.CHICKEN
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnSecondStageMob() {
+        EntityType[] mobs = {
+                EntityType.CAVE_SPIDER,
+                EntityType.ZOMBIE,
+                EntityType.SKELETON,
+                EntityType.CREEPER,
+                EntityType.ENDERMAN,
+                EntityType.BAT
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnThirdStageMob() {
+        EntityType[] mobs = {
+                EntityType.COW,
+                EntityType.STRAY,
+                EntityType.ZOMBIE,
+                EntityType.SPIDER,
+                EntityType.SHEEP,
+                EntityType.ENDERMAN,
+                EntityType.WOLF,
+                EntityType.SNOWMAN,
+                EntityType.SKELETON,
+                EntityType.POLAR_BEAR,
+                EntityType.PIG,
+                EntityType.CREEPER,
+                EntityType.RABBIT,
+                EntityType.CHICKEN
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnFourthStageMob() {
+        EntityType[] mobs = {
+                EntityType.COD,
+                EntityType.TROPICAL_FISH,
+                EntityType.DOLPHIN,
+                EntityType.SALMON,
+                EntityType.TURTLE,
+                EntityType.SQUID,
+                EntityType.DROWNED
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnFifthStageMob() {
+        EntityType[] mobs = {
+                EntityType.WITCH,
+                EntityType.PARROT,
+                EntityType.SKELETON,
+                EntityType.ZOMBIE,
+                EntityType.OCELOT,
+                EntityType.CREEPER,
+                EntityType.ENDERMAN,
+                EntityType.PANDA,
+                EntityType.CHICKEN
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnSixthStageMob() {
+        EntityType[] mobs = {
+                EntityType.WITCH,
+                EntityType.ZOMBIE,
+                EntityType.SKELETON,
+                EntityType.ZOMBIE_VILLAGER,
+                EntityType.CAT,
+                EntityType.SLIME,
+                EntityType.VILLAGER,
+                EntityType.EVOKER,
+                EntityType.CHICKEN
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnSeventhStageMob() {
+        spawnSixthStageMob();
+    }
+
+    private void spawnEighthStageMob() {
+        EntityType[] mobs = {
+                EntityType.ZOMBIE,
+                EntityType.SKELETON,
+                EntityType.SPIDER,
+                EntityType.HUSK,
+                EntityType.CREEPER,
+                EntityType.ENDERMAN,
+                EntityType.RABBIT
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnNinthStageMob() {
+        EntityType[] mobs = {
+                EntityType.SKELETON,
+                EntityType.MAGMA_CUBE,
+                EntityType.GHAST,
+                EntityType.ZOMBIFIED_PIGLIN,
+                EntityType.ENDERMAN,
+                EntityType.BLAZE,
+                EntityType.WITHER_SKELETON
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnTenthStageMob() {
+        EntityType[] mobs = {
+                EntityType.COW,
+                EntityType.DONKEY,
+                EntityType.SHEEP,
+                EntityType.FOX,
+                EntityType.PIG,
+                EntityType.BEE,
+                EntityType.HORSE,
+                EntityType.CAT,
+                EntityType.VILLAGER,
+                EntityType.RABBIT,
+                EntityType.CHICKEN
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
+    }
+
+    private void spawnEleventhStageMob() {
+        EntityType[] mobs = {
+                EntityType.COW,
+                EntityType.DONKEY,
+                EntityType.SHEEP,
+                EntityType.FOX,
+                EntityType.PIG,
+                EntityType.BEE,
+                EntityType.HORSE
+        };
+
+        mobSpawnLocation.getWorld().spawnEntity(mobSpawnLocation, mobs[random.nextInt(mobs.length)]);
     }
 
     private Material getWoodBlock() {
@@ -210,6 +411,8 @@ public class BlockListener implements Listener {
                 MANGROVE_LOG,
                 OAK_LOG,
                 SPRUCE_LOG,
+                DIRT,
+                GRASS_BLOCK
         };
 
         return woodBlocks[random.nextInt(woodBlocks.length)];
@@ -254,7 +457,11 @@ public class BlockListener implements Listener {
                 COARSE_DIRT,
                 STONE,
                 CLAY,
-                EMERALD_ORE
+                EMERALD_ORE,
+                PUMPKIN,
+                STONE,
+                MELON,
+                DIRT
         };
         return plainsBlocks[random.nextInt(plainsBlocks.length)];
     }

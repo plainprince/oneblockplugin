@@ -29,7 +29,7 @@ public class Main extends JavaPlugin {
                 if (sender instanceof Player player && args.length == 0) {
                     String dimensionName = "customdimension" + player.getName();
                     if(Bukkit.getWorld(dimensionName) != null) {
-                        player.sendMessage("Du hast schon einen oneblock, benutze /oneblock tp");
+                        player.sendMessage("Du hast schon einen oneblock, benutze /oneblock:tp");
                     }else {
                         player.sendMessage("building oneBlock");
                         createListenerInDimension(dimensionName);
@@ -95,9 +95,9 @@ public class Main extends JavaPlugin {
                 if (sender instanceof Player player && args.length == 0) {
                     String dimensionName = "customdimension" + player.getName();
                     player.sendMessage("anfangen den OneBlock zu säubern");
-                    for (int i = -32; i < 32; i++) {
+                    for (int i = -65; i < 32; i++) {
                         for (int j = -64; j < 320; j++) {
-                            for (int k = -32; k < 32; k++) {
+                            for (int k = -32; k < 65; k++) {
                                 Block block = Bukkit.getWorld(dimensionName).getBlockAt(i, j, k);
                                 block.setType(Material.AIR);
                             }
@@ -210,7 +210,8 @@ public class Main extends JavaPlugin {
             World newWorld = Bukkit.createWorld(worldCreator);
             newWorld.setSpawnLocation(0, 101, 0);
             newWorld.getWorldBorder().setCenter(0.5, 0.5);
-            newWorld.getWorldBorder().setSize(65);
+            newWorld.getWorldBorder().setSize(129);
+            newWorld.setGameRuleValue("doInsomnia", "false");
 
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -218,9 +219,9 @@ public class Main extends JavaPlugin {
                 Thread.currentThread().interrupt();
             }
 
-            for (int i = -32; i < 33; i++) {
+            for (int i = -32; i < 65; i++) {
                 for (int j = -64; j < -60; j++) {
-                    for (int k = -32; k < 33; k++) {
+                    for (int k = -32; k < 65; k++) {
                         Block block = Bukkit.getWorld(dimension).getBlockAt(i, j, k);
                         block.setType(Material.AIR);
                     }
